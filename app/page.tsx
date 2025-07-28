@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +28,128 @@ import {
 
 export default function GypshophilaBoardy() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [rating, setRating] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [approvedReviews, setApprovedReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+
+  // Fetch approved reviews on component mount
+  const fetchReviews = async () => {
+    try {
+      const response = await fetch("/api/reviews");
+      const result = await response.json();
+
+      if (result.success) {
+        const formattedReviews = result.data.map((review: any) => ({
+          id: review.id,
+          name: review.name,
+          rating: review.rating,
+          review: review.review,
+          service: getServiceDisplayName(review.service),
+          date: formatTimeAgo(review.createdAt),
+        }));
+        setApprovedReviews(formattedReviews);
+      }
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  // Helper functions
+  const formatTimeAgo = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) return "1 hari yang lalu";
+    if (diffDays < 7) return `${diffDays} hari yang lalu`;
+    if (diffDays < 14) return "1 minggu yang lalu";
+    if (diffDays < 21) return "2 minggu yang lalu";
+    if (diffDays < 28) return "3 minggu yang lalu";
+    if (diffDays < 60) return "1 bulan yang lalu";
+
+    return `${Math.floor(diffDays / 30)} bulan yang lalu`;
+  };
+
+  const getServiceDisplayName = (service: string): string => {
+    switch (service) {
+      case "standing-flower":
+        return "Standing Acrylic Flower";
+      case "standing-banner":
+        return "Standing Banner";
+      case "both":
+        return "Standing Flower & Banner";
+      default:
+        return service;
+    }
+  };
+
+  // Fetch reviews on component mount
+  React.useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  // Handle review form submission
+  const handleReviewSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitMessage(null);
+
+    const formData = new FormData(e.currentTarget);
+    const reviewData = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      rating: rating,
+      service: formData.get("service") as string,
+      review: formData.get("review") as string,
+      consent: formData.get("consent") === "on",
+    };
+
+    try {
+      const response = await fetch("/api/reviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reviewData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSubmitMessage({
+          type: "success",
+          text: "Terima kasih! Ulasan Anda telah dikirim dan sedang menunggu persetujuan admin. Ulasan akan muncul setelah disetujui.",
+        });
+
+        // Reset form
+        (e.target as HTMLFormElement).reset();
+        setRating(0);
+      } else {
+        setSubmitMessage({
+          type: "error",
+          text:
+            result.error ||
+            "Terjadi kesalahan saat mengirim ulasan. Silakan coba lagi.",
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      setSubmitMessage({
+        type: "error",
+        text: "Terjadi kesalahan saat mengirim ulasan. Silakan coba lagi.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const galleryImages = [
     {
@@ -316,6 +438,310 @@ export default function GypshophilaBoardy() {
                 </p>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Customer Reviews Section */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-gray-900 mb-4">
+              Kata Pelanggan Kami
+            </h2>
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 px-4">
+              Kepuasan pelanggan adalah prioritas utama kami
+            </p>
+          </div>
+
+          {/* Approved Reviews Display */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-6xl mx-auto mb-12">
+            {reviewsLoading ? (
+              // Loading skeleton
+              [...Array(4)].map((_, i) => (
+                <Card
+                  key={i}
+                  className="p-4 sm:p-6 border-0 shadow-lg animate-pulse"
+                >
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center space-x-1 mb-3">
+                      {[...Array(5)].map((_, j) => (
+                        <div
+                          key={j}
+                          className="w-5 h-5 bg-gray-200 rounded"
+                        ></div>
+                      ))}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-full"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                    <div className="flex items-center justify-between pt-3 border-t">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                        <div className="space-y-1">
+                          <div className="h-4 bg-gray-200 rounded w-20"></div>
+                          <div className="h-3 bg-gray-200 rounded w-16"></div>
+                        </div>
+                      </div>
+                      <div className="h-3 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : approvedReviews.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500 text-lg">
+                  Belum ada review yang disetujui
+                </p>
+                <p className="text-gray-400 text-sm mt-2">
+                  Review dari pelanggan akan muncul di sini setelah disetujui
+                  admin
+                </p>
+              </div>
+            ) : (
+              approvedReviews.map((review) => (
+                <Card
+                  key={review.id}
+                  className="p-4 sm:p-6 border-0 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center space-x-1 mb-3">
+                      {[...Array(5)].map((_, i) => (
+                        <span
+                          key={i}
+                          className={`text-lg ${
+                            i < review.rating
+                              ? "text-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          ⭐
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-sm sm:text-base text-gray-700 italic leading-relaxed">
+                      "{review.review}"
+                    </p>
+                    <div className="flex items-center justify-between pt-3 border-t">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">
+                            {review.name.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 text-sm">
+                            {review.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {review.service}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-400">{review.date}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Review Submission Form */}
+          <div className="max-w-2xl mx-auto">
+            <Card className="p-6 sm:p-8 border-0 shadow-xl bg-gradient-to-br from-blue-50 to-purple-50">
+              <CardContent className="space-y-6">
+                <div className="text-center">
+                  <h3 className="text-xl sm:text-2xl font-serif font-bold text-gray-900 mb-2">
+                    Bagikan Pengalaman Anda
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-600">
+                    Ceritakan pengalaman Anda menggunakan layanan Gypshophila
+                    Boardy
+                  </p>
+                </div>
+
+                <form className="space-y-4" onSubmit={handleReviewSubmit}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nama Lengkap *
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="Masukkan nama Anda"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email (Opsional)
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        placeholder="email@example.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Rating *
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setRating(star)}
+                            className={`w-10 h-10 text-3xl ${
+                              star <= rating
+                                ? "text-yellow-400"
+                                : "text-gray-300"
+                            } hover:text-yellow-400 transition-colors duration-200 hover:scale-110 transform`}
+                          >
+                            ⭐
+                          </button>
+                        ))}
+                      </div>
+                      {rating > 0 && (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-600 font-medium">
+                            Rating yang dipilih: {rating}/5
+                          </span>
+                          <div className="flex items-center space-x-1">
+                            {[...Array(rating)].map((_, i) => (
+                              <span key={i} className="text-yellow-400 text-sm">
+                                ⭐
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {rating === 0 && (
+                      <p className="text-xs text-red-500 mt-1">
+                        Silakan pilih rating
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Layanan yang Digunakan *
+                    </label>
+                    <select
+                      name="service"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    >
+                      <option value="">Pilih layanan</option>
+                      <option value="standing-flower">
+                        Standing Acrylic Flower
+                      </option>
+                      <option value="standing-banner">Standing Banner</option>
+                      <option value="both">Keduanya</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ulasan Anda *
+                    </label>
+                    <textarea
+                      name="review"
+                      required
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+                      placeholder="Ceritakan pengalaman Anda menggunakan layanan kami..."
+                    />
+                  </div>
+
+                  <div className="flex items-start space-x-2">
+                    <input
+                      type="checkbox"
+                      id="consent"
+                      name="consent"
+                      required
+                      className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label
+                      htmlFor="consent"
+                      className="text-xs sm:text-sm text-gray-600"
+                    >
+                      Saya setuju bahwa ulasan ini dapat ditampilkan di website
+                      dan media sosial Gypshophila Boardy untuk keperluan
+                      promosi.
+                    </label>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || rating === 0}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Mengirim...
+                      </>
+                    ) : (
+                      "Kirim Ulasan"
+                    )}
+                  </Button>
+                </form>
+
+                {submitMessage && (
+                  <div
+                    className={`text-center p-3 rounded-lg text-sm ${
+                      submitMessage.type === "success"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {submitMessage.text}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Review Stats */}
+          <div className="text-center mt-8 sm:mt-12">
+            <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-8 text-gray-600">
+              <div className="flex items-center">
+                <div className="flex items-center space-x-1 mr-2">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="w-5 h-5 text-yellow-400">
+                      ⭐
+                    </span>
+                  ))}
+                </div>
+                <span className="font-semibold">
+                  {approvedReviews.length > 0
+                    ? `${(
+                        approvedReviews.reduce(
+                          (sum, review) => sum + review.rating,
+                          0
+                        ) / approvedReviews.length
+                      ).toFixed(1)}/5.0`
+                    : "4.8/5.0"}
+                </span>
+              </div>
+              <div className="text-sm">
+                Berdasarkan{" "}
+                {approvedReviews.length > 0
+                  ? `${approvedReviews.length}+`
+                  : "50+"}{" "}
+                ulasan pelanggan
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -673,6 +1099,27 @@ export default function GypshophilaBoardy() {
                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 <span>Semarang, Indonesia</span>
               </div>
+            </div>
+            <div className="flex justify-center">
+              <a
+                href="/admin-login"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 shadow-sm"
+              >
+                <svg
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+                Admin Panel
+              </a>
             </div>
             <p className="text-xs sm:text-sm text-gray-500">
               © 2024 Gypshophila Boardy - P2MW Program. All rights reserved.

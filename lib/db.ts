@@ -1,4 +1,4 @@
-// Database configuration and types
+// Database types and interfaces for the review system
 
 export interface Review {
   id: string;
@@ -8,49 +8,30 @@ export interface Review {
   service: string;
   review: string;
   status: "pending" | "approved" | "rejected";
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
-// In-memory store with server-side persistence
-class ReviewStore {
-  async getApprovedReviews(): Promise<Review[]> {
-    // This will be handled by API routes on the server
-    throw new Error("This method should only be called from API routes");
-  }
-
-  async getAllReviews(): Promise<Review[]> {
-    // This will be handled by API routes on the server
-    throw new Error("This method should only be called from API routes");
-  }
-
-  async getPendingReviews(): Promise<Review[]> {
-    // This will be handled by API routes on the server
-    throw new Error("This method should only be called from API routes");
-  }
-
-  async createReview(
-    reviewData: Omit<Review, "id" | "createdAt" | "updatedAt">
-  ): Promise<Review> {
-    // This will be handled by API routes on the server
-    throw new Error("This method should only be called from API routes");
-  }
-
-  async updateReviewStatus(
-    id: string,
-    status: "approved" | "rejected"
-  ): Promise<Review | null> {
-    // This will be handled by API routes on the server
-    throw new Error("This method should only be called from API routes");
-  }
-
-  async getReviewById(id: string): Promise<Review | null> {
-    // This will be handled by API routes on the server
-    throw new Error("This method should only be called from API routes");
-  }
+export interface ReviewSubmission {
+  name: string;
+  email?: string;
+  rating: number;
+  service: string;
+  review: string;
+  consent: boolean;
 }
 
-export const reviewStore = new ReviewStore();
+export interface ReviewStats {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+}
+
+// Helper functions
+export const generateId = (): string => {
+  return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+};
 
 // Helper functions that can be used on both client and server
 export function formatTimeAgo(dateString: string): string {

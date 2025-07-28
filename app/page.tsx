@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
+import StarRating from "@/components/ui/star-rating";
 import {
   Heart,
   Sparkles,
@@ -50,7 +51,7 @@ export default function GypshophilaBoardy() {
           rating: review.rating,
           review: review.review,
           service: getServiceDisplayName(review.service),
-          date: formatTimeAgo(review.createdAt),
+          date: formatTimeAgo(review.created_at),
         }));
         setApprovedReviews(formattedReviews);
       }
@@ -507,20 +508,11 @@ export default function GypshophilaBoardy() {
                   className="p-4 sm:p-6 border-0 shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
                   <CardContent className="space-y-4">
-                    <div className="flex items-center space-x-1 mb-3">
-                      {[...Array(5)].map((_, i) => (
-                        <span
-                          key={i}
-                          className={`text-lg ${
-                            i < review.rating
-                              ? "text-yellow-400"
-                              : "text-gray-300"
-                          }`}
-                        >
-                          ⭐
-                        </span>
-                      ))}
-                    </div>
+                    <StarRating
+                      rating={review.rating}
+                      size="md"
+                      className="mb-3"
+                    />
                     <p className="text-sm sm:text-base text-gray-700 italic leading-relaxed">
                       "{review.review}"
                     </p>
@@ -594,34 +586,18 @@ export default function GypshophilaBoardy() {
                       Rating *
                     </label>
                     <div className="space-y-2">
-                      <div className="flex items-center space-x-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            type="button"
-                            onClick={() => setRating(star)}
-                            className={`w-10 h-10 text-3xl ${
-                              star <= rating
-                                ? "text-yellow-400"
-                                : "text-gray-300"
-                            } hover:text-yellow-400 transition-colors duration-200 hover:scale-110 transform`}
-                          >
-                            ⭐
-                          </button>
-                        ))}
-                      </div>
+                      <StarRating
+                        rating={rating}
+                        interactive={true}
+                        onRatingChange={setRating}
+                        size="lg"
+                      />
                       {rating > 0 && (
                         <div className="flex items-center space-x-2">
                           <span className="text-sm text-gray-600 font-medium">
                             Rating yang dipilih: {rating}/5
                           </span>
-                          <div className="flex items-center space-x-1">
-                            {[...Array(rating)].map((_, i) => (
-                              <span key={i} className="text-yellow-400 text-sm">
-                                ⭐
-                              </span>
-                            ))}
-                          </div>
+                          <StarRating rating={rating} size="sm" />
                         </div>
                       )}
                     </div>
@@ -716,13 +692,20 @@ export default function GypshophilaBoardy() {
           <div className="text-center mt-8 sm:mt-12">
             <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-8 text-gray-600">
               <div className="flex items-center">
-                <div className="flex items-center space-x-1 mr-2">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="w-5 h-5 text-yellow-400">
-                      ⭐
-                    </span>
-                  ))}
-                </div>
+                <StarRating
+                  rating={
+                    approvedReviews.length > 0
+                      ? Math.round(
+                          approvedReviews.reduce(
+                            (sum, review) => sum + review.rating,
+                            0
+                          ) / approvedReviews.length
+                        )
+                      : 5
+                  }
+                  size="md"
+                  className="mr-2"
+                />
                 <span className="font-semibold">
                   {approvedReviews.length > 0
                     ? `${(

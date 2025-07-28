@@ -2,16 +2,16 @@ import { Metadata } from "next";
 import HomepageClient from "@/components/homepage-client";
 
 export const metadata: Metadata = {
-  title: "Gypshophila Boardy - Sewa Standing Acrylic Flower & Banner Aesthetic",
+  title: "Gypshophila Boardy - Sewa Standing Acrylic Flower & Banner Semarang",
   description:
-    "Sewa Standing Acrylic Flower & Banner yang Aesthetic, Praktis, dan Terjangkau untuk Semua Momen Berharga Anda. Layanan rental terpercaya di Semarang.",
+    "Sewa Standing Acrylic Flower & Banner Aesthetic di Semarang. Praktis, Terjangkau, dan Berkualitas untuk Wedding, Wisuda, Grand Opening. Free Konsultasi!",
   keywords:
-    "sewa standing flower, sewa banner, acrylic flower, standing banner, dekorasi acara, rental semarang, gypshophila boardy",
+    "sewa standing flower semarang, sewa banner semarang, acrylic flower semarang, standing banner wedding, dekorasi acara semarang, rental flower board semarang, gypshophila boardy, sewa dekorasi murah semarang, papan bunga semarang",
   openGraph: {
     title: "Gypshophila Boardy - Sewa Standing Acrylic Flower & Banner",
     description:
       "Sewa Standing Acrylic Flower & Banner yang Aesthetic, Praktis, dan Terjangkau untuk Semua Momen Berharga Anda.",
-    url: "https://your-domain.com",
+    url: "https://gypshopila.vercel.app",
     siteName: "Gypshophila Boardy",
     locale: "id_ID",
     type: "website",

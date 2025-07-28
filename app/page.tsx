@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: "Gypshophila Boardy - Sewa Standing Acrylic Flower & Banner",
     description:
       "Sewa Standing Acrylic Flower & Banner yang Aesthetic, Praktis, dan Terjangkau untuk Semua Momen Berharga Anda.",
-    url: "https://gypshopila.vercel.app",
+    url: "https://gypshophila.vercel.app",
     siteName: "Gypshophila Boardy",
     locale: "id_ID",
     type: "website",

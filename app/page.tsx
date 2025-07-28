@@ -1,5 +1,6 @@
 "use client";
 
+import Head from "next/head";
 import React, { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -249,6 +250,12 @@ export default function GypshophilaBoardy() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <Head>
+        <meta
+          name="google-site-verification"
+          content="2kZ3sswUXOR06tRimHuJgAjOXCFW3GJ1t_m6TJ2wz7s"
+        />
+      </Head>
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-8 sm:py-12 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-6xl mx-auto">

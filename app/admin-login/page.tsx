@@ -110,18 +110,6 @@ export default function AdminLoginPage() {
               )}
             </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Default password:{" "}
-              <code className="bg-gray-100 px-2 py-1 rounded text-xs">
-                gypshophila2024
-              </code>
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              Ubah password di environment variables (ADMIN_PASSWORD)
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

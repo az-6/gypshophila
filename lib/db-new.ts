@@ -70,13 +70,35 @@ export function formatTimeAgo(dateString: string): string {
 }
 
 export function getServiceDisplayName(service: string): string {
+  // Handle multiple services (comma-separated)
+  if (service.includes(", ")) {
+    const services = service.split(", ");
+    return services
+      .map((s) => {
+        switch (s) {
+          case "standing-flower":
+            return "Standing Acrylic Flower";
+          case "standing-banner":
+            return "Standing Banner";
+          case "bouquet-flowers":
+            return "Bouquet Flowers";
+          default:
+            return s;
+        }
+      })
+      .join(", ");
+  }
+
+  // Handle single service (backward compatibility)
   switch (service) {
     case "standing-flower":
       return "Standing Acrylic Flower";
     case "standing-banner":
       return "Standing Banner";
+    case "bouquet-flowers":
+      return "Bouquet Flowers";
     case "both":
-      return "Standing Flower & Banner";
+      return "Standing Flower & Banner"; // Keep for backward compatibility
     default:
       return service;
   }

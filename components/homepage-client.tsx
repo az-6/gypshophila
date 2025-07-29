@@ -36,6 +36,8 @@ export default function HomepageClient() {
     text: string;
   } | null>(null);
   const [approvedReviews, setApprovedReviews] = useState<any[]>([]);
+  const [displayedReviews, setDisplayedReviews] = useState<any[]>([]);
+  const [reviewsToShow, setReviewsToShow] = useState(6); // Show 6 reviews initially
   const [reviewsLoading, setReviewsLoading] = useState(true);
 
   // Fetch approved reviews on component mount
@@ -54,6 +56,7 @@ export default function HomepageClient() {
           date: formatTimeAgo(review.created_at),
         }));
         setApprovedReviews(formattedReviews);
+        setDisplayedReviews(formattedReviews.slice(0, reviewsToShow));
       }
     } catch (error) {
       console.error("Error fetching reviews:", error);
@@ -80,13 +83,35 @@ export default function HomepageClient() {
   };
 
   const getServiceDisplayName = (service: string): string => {
+    // Handle multiple services (comma-separated)
+    if (service.includes(", ")) {
+      const services = service.split(", ");
+      return services
+        .map((s) => {
+          switch (s) {
+            case "standing-flower":
+              return "Standing Acrylic Flower";
+            case "standing-banner":
+              return "Standing Banner";
+            case "bouquet-flowers":
+              return "Bouquet Flowers";
+            default:
+              return s;
+          }
+        })
+        .join(", ");
+    }
+
+    // Handle single service (backward compatibility)
     switch (service) {
       case "standing-flower":
         return "Standing Acrylic Flower";
       case "standing-banner":
         return "Standing Banner";
+      case "bouquet-flowers":
+        return "Bouquet Flowers";
       case "both":
-        return "Standing Flower & Banner";
+        return "Standing Flower & Banner"; // Keep for backward compatibility
       default:
         return service;
     }
@@ -97,6 +122,26 @@ export default function HomepageClient() {
     fetchReviews();
   }, []);
 
+  // Update displayed reviews when approvedReviews or reviewsToShow changes
+  React.useEffect(() => {
+    setDisplayedReviews(approvedReviews.slice(0, reviewsToShow));
+  }, [approvedReviews, reviewsToShow]);
+
+  // Handle loading more reviews
+  const loadMoreReviews = () => {
+    setReviewsToShow((prev) => prev + 6); // Load 6 more reviews
+  };
+
+  // Handle showing all reviews
+  const showAllReviews = () => {
+    setReviewsToShow(approvedReviews.length);
+  };
+
+  // Handle collapsing reviews back to initial view
+  const collapseReviews = () => {
+    setReviewsToShow(6);
+  };
+
   // Handle review form submission
   const handleReviewSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -104,11 +149,25 @@ export default function HomepageClient() {
     setSubmitMessage(null);
 
     const formData = new FormData(e.currentTarget);
+
+    // Get selected services from checkboxes
+    const selectedServices = formData.getAll("services") as string[];
+
+    // Validate that at least one service is selected
+    if (selectedServices.length === 0) {
+      setSubmitMessage({
+        type: "error",
+        text: "Silakan pilih minimal satu layanan yang telah Anda gunakan.",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     const reviewData = {
       name: formData.get("name") as string,
       email: formData.get("email") as string,
       rating: rating,
-      service: formData.get("service") as string,
+      service: selectedServices.join(", "), // Join multiple services with comma
       review: formData.get("review") as string,
       consent: formData.get("consent") === "on",
     };
@@ -502,7 +561,7 @@ export default function HomepageClient() {
                 </p>
               </div>
             ) : (
-              approvedReviews.map((review) => (
+              displayedReviews.map((review) => (
                 <Card
                   key={review.id}
                   className="p-4 sm:p-6 border-0 shadow-lg hover:shadow-xl transition-shadow duration-300"
@@ -539,6 +598,42 @@ export default function HomepageClient() {
               ))
             )}
           </div>
+
+          {/* Load More / Show All Buttons */}
+          {approvedReviews.length > 6 && (
+            <div className="text-center mt-8 space-y-4">
+              {reviewsToShow < approvedReviews.length ? (
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <Button
+                    onClick={loadMoreReviews}
+                    variant="outline"
+                    className="px-6 py-3 bg-white hover:bg-blue-50 border-blue-200 text-blue-600 hover:text-blue-700 transition-colors duration-300"
+                  >
+                    Lihat {Math.min(6, approvedReviews.length - reviewsToShow)}{" "}
+                    Review Lagi
+                  </Button>
+                  <Button
+                    onClick={showAllReviews}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-300"
+                  >
+                    Lihat Semua {approvedReviews.length} Review
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={collapseReviews}
+                  variant="outline"
+                  className="px-6 py-3 bg-white hover:bg-gray-50 border-gray-200 text-gray-600 hover:text-gray-700 transition-colors duration-300"
+                >
+                  Sembunyikan Review
+                </Button>
+              )}
+              <p className="text-sm text-gray-500">
+                Menampilkan {displayedReviews.length} dari{" "}
+                {approvedReviews.length} review
+              </p>
+            </div>
+          )}
 
           {/* Review Submission Form */}
           <div className="max-w-2xl mx-auto">
@@ -612,18 +707,35 @@ export default function HomepageClient() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Layanan yang Digunakan *
                     </label>
-                    <select
-                      name="service"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    >
-                      <option value="">Pilih layanan</option>
-                      <option value="standing-flower">
-                        Standing Acrylic Flower
-                      </option>
-                      <option value="standing-banner">Standing Banner</option>
-                      <option value="both">Keduanya</option>
-                    </select>
+                    <div className="space-y-2">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="services"
+                          value="standing-flower"
+                          className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm">Standing Acrylic Flower</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="services"
+                          value="standing-banner"
+                          className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm">Standing Banner</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="services"
+                          value="bouquet-flowers"
+                          className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm">Bouquet Flowers</span>
+                      </label>
+                    </div>
                   </div>
 
                   <div>

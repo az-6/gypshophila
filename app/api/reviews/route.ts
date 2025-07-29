@@ -70,10 +70,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate service
-    const validServices = ["standing-flower", "standing-banner", "both"];
-    if (!validServices.includes(body.service)) {
+    const validServices = [
+      "standing-flower",
+      "standing-banner",
+      "bouquet-flowers",
+      "both", // Keep for backward compatibility
+    ];
+
+    // Handle multiple services (comma-separated) or single service
+    const servicesToValidate = body.service.includes(", ")
+      ? body.service.split(", ")
+      : [body.service];
+
+    const invalidServices = servicesToValidate.filter(
+      (service) => !validServices.includes(service)
+    );
+    if (invalidServices.length > 0) {
       return NextResponse.json(
-        { success: false, error: "Invalid service type" },
+        {
+          success: false,
+          error: `Invalid service type(s): ${invalidServices.join(", ")}`,
+        },
         { status: 400 }
       );
     }

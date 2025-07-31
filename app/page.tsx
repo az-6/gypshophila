@@ -1021,7 +1021,7 @@ export default function GypshophilaBoardy() {
                 className="bg-white text-blue-600 hover:bg-gray-100 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300"
                 onClick={() =>
                   window.open(
-                    "https://wa.me/6282183301667?text=Halo, saya tertarik dengan layanan Gypshophila Boardy",
+                    "https://wa.me/6283148764058?text=Halo, saya tertarik dengan layanan Gypshophila Boardy",
                     "_blank"
                   )
                 }
@@ -1096,7 +1096,7 @@ export default function GypshophilaBoardy() {
             <div className="flex flex-col sm:flex-row justify-center sm:space-x-8 space-y-2 sm:space-y-0 text-gray-600 text-sm sm:text-base">
               <div className="flex items-center justify-center">
                 <Phone className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                <span>+62 821-8330-1667</span>
+                <span>+62 831-4876-4058</span>
               </div>
               <div className="flex items-center justify-center">
                 <Instagram className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />

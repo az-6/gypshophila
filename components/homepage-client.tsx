@@ -25,6 +25,7 @@ import {
   Mail,
   MapPin,
   Instagram,
+  Video,
 } from "lucide-react";
 
 export default function HomepageClient() {
@@ -1103,7 +1104,7 @@ export default function HomepageClient() {
               Anda!
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
               <Button
                 size="lg"
                 className="bg-white text-blue-600 hover:bg-gray-100 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300"
@@ -1120,20 +1121,36 @@ export default function HomepageClient() {
                 </span>
                 <span className="sm:hidden">WHATSAPP</span>
               </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium bg-transparent"
-                onClick={() =>
-                  window.open(
-                    "https://www.instagram.com/gypshophila.boardy/",
-                    "_blank"
-                  )
-                }
-              >
-                <Instagram className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-                Instagram
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium bg-transparent"
+                  onClick={() =>
+                    window.open(
+                      "https://www.instagram.com/gypshophila.boardy/",
+                      "_blank"
+                    )
+                  }
+                >
+                  <Instagram className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                  Instagram
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-2 border-white text-white hover:bg-white hover:text-purple-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium bg-transparent"
+                  onClick={() =>
+                    window.open(
+                      "https://www.tiktok.com/@gypshophila.boardy?_t=ZS-8yqX46ZZqtD&_r=1",
+                      "_blank"
+                    )
+                  }
+                >
+                  <Video className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                  TikTok
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -1188,6 +1205,10 @@ export default function HomepageClient() {
               </div>
               <div className="flex items-center justify-center">
                 <Instagram className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                <span className="break-all">gypshophila.boardy</span>
+              </div>
+              <div className="flex items-center justify-center">
+                <Video className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 <span className="break-all">gypshophila.boardy</span>
               </div>
               <div className="flex items-center justify-center">

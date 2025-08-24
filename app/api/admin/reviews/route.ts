@@ -1,26 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fileStorage } from "@/lib/storage";
+import { createServerSupabaseClient } from "@/lib/supabase";
 
 // GET /api/admin/reviews - Get all reviews (admin only)
 export async function GET() {
   try {
-    const reviews = await fileStorage.readReviews();
-    const stats = {
-      total: reviews.length,
-      approved: reviews.filter((r) => r.status === "approved").length,
-      pending: reviews.filter((r) => r.status === "pending").length,
-      rejected: reviews.filter((r) => r.status === "rejected").length,
-    };
+    const serverSupabase = createServerSupabaseClient();
 
-    // Sort by creation date (newest first)
-    const sortedReviews = reviews.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    const { data: reviews, error } = await serverSupabase
+      .from("reviews")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return NextResponse.json(
+        { success: false, error: "Failed to fetch reviews" },
+        { status: 500 }
+      );
+    }
+
+    const reviewsData = reviews || [];
+    const stats = {
+      total: reviewsData.length,
+      approved: reviewsData.filter((r) => r.status === "approved").length,
+      pending: reviewsData.filter((r) => r.status === "pending").length,
+      rejected: reviewsData.filter((r) => r.status === "rejected").length,
+    };
 
     return NextResponse.json({
       success: true,
-      data: sortedReviews,
+      data: reviewsData,
       stats,
     });
   } catch (error) {
@@ -52,27 +61,32 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Read reviews, update the specific one, and save back
-    const reviews = await fileStorage.readReviews();
-    const reviewIndex = reviews.findIndex((review) => review.id === reviewId);
+    const serverSupabase = createServerSupabaseClient();
 
-    if (reviewIndex === -1) {
+    const { data: updatedReview, error } = await serverSupabase
+      .from("reviews")
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", reviewId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return NextResponse.json(
+        { success: false, error: "Failed to update review" },
+        { status: 500 }
+      );
+    }
+
+    if (!updatedReview) {
       return NextResponse.json(
         { success: false, error: "Review not found" },
         { status: 404 }
       );
     }
-
-    // Update the review status
-    reviews[reviewIndex] = {
-      ...reviews[reviewIndex],
-      status,
-      updatedAt: new Date().toISOString(),
-    };
-
-    // Save the updated reviews
-    await fileStorage.writeReviews(reviews);
-    const updatedReview = reviews[reviewIndex];
 
     console.log("Review status updated:", reviewId, status);
 
@@ -103,32 +117,42 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Read reviews, find and delete the specific one
-    const reviews = await fileStorage.readReviews();
-    const reviewIndex = reviews.findIndex((review) => review.id === reviewId);
+    const serverSupabase = createServerSupabaseClient();
 
-    if (reviewIndex === -1) {
+    // First get the review for logging
+    const { data: reviewToDelete, error: fetchError } = await serverSupabase
+      .from("reviews")
+      .select("*")
+      .eq("id", reviewId)
+      .single();
+
+    if (fetchError || !reviewToDelete) {
       return NextResponse.json(
         { success: false, error: "Review not found" },
         { status: 404 }
       );
     }
 
-    // Get the review data before deletion for logging
-    const deletedReview = reviews[reviewIndex];
+    // Delete the review
+    const { error: deleteError } = await serverSupabase
+      .from("reviews")
+      .delete()
+      .eq("id", reviewId);
 
-    // Remove the review from array
-    reviews.splice(reviewIndex, 1);
+    if (deleteError) {
+      console.error("Supabase delete error:", deleteError);
+      return NextResponse.json(
+        { success: false, error: "Failed to delete review" },
+        { status: 500 }
+      );
+    }
 
-    // Save the updated reviews
-    await fileStorage.writeReviews(reviews);
-
-    console.log("Review deleted:", reviewId, deletedReview.name);
+    console.log("Review deleted:", reviewId, reviewToDelete.name);
 
     return NextResponse.json({
       success: true,
       message: "Review deleted successfully",
-      data: deletedReview,
+      data: reviewToDelete,
     });
   } catch (error) {
     console.error("Error deleting review:", error);

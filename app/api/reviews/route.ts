@@ -1,22 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fileStorage } from "@/lib/storage";
-import { Review } from "@/lib/db";
+import { supabase, createServerSupabaseClient } from "@/lib/supabase";
+import { Review, ReviewSubmission, generateId } from "@/lib/db";
 
 // GET /api/reviews - Get approved reviews
 export async function GET() {
   try {
-    const reviews = await fileStorage.readReviews();
-    const approvedReviews = reviews
-      .filter((review) => review.status === "approved")
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    const { data: reviews, error } = await supabase
+      .from("reviews")
+      .select("*")
+      .eq("status", "approved")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return NextResponse.json(
+        { success: false, error: "Failed to fetch reviews" },
+        { status: 500 }
       );
+    }
 
     return NextResponse.json({
       success: true,
-      data: approvedReviews,
-      count: approvedReviews.length,
+      data: reviews || [],
+      count: reviews?.length || 0,
     });
   } catch (error) {
     console.error("Error fetching reviews:", error);
@@ -30,26 +36,35 @@ export async function GET() {
 // POST /api/reviews - Submit new review
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body: ReviewSubmission = await request.json();
 
     // Validate required fields
-    const requiredFields = ["name", "rating", "service", "review", "consent"];
-    const missingFields = requiredFields.filter((field) => !body[field]);
-
-    if (missingFields.length > 0) {
+    if (
+      !body.name ||
+      !body.rating ||
+      !body.service ||
+      !body.review ||
+      !body.consent
+    ) {
       return NextResponse.json(
         {
           success: false,
-          error: `Missing required fields: ${missingFields.join(", ")}`,
+          error: "Missing required fields",
         },
         { status: 400 }
       );
     }
 
     // Validate rating
-    if (body.rating < 1 || body.rating > 5) {
+    const ratingNum = Number(body.rating);
+    if (
+      isNaN(ratingNum) ||
+      ratingNum < 1 ||
+      ratingNum > 5 ||
+      !Number.isInteger(ratingNum)
+    ) {
       return NextResponse.json(
-        { success: false, error: "Rating must be between 1 and 5" },
+        { success: false, error: "Rating must be an integer between 1 and 5" },
         { status: 400 }
       );
     }
@@ -71,41 +86,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create review
-    const reviewData = {
+    // Use server client for inserting data
+    const serverSupabase = createServerSupabaseClient();
+
+    const newReview: Omit<Review, "id"> = {
       name: body.name.trim(),
       email: body.email?.trim() || undefined,
-      rating: parseInt(body.rating),
+      rating: ratingNum, // Use validated rating
       service: body.service,
       review: body.review.trim(),
-      status: "pending" as const,
+      status: "pending",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
-    // Read existing reviews, add new one, and save
-    const reviews = await fileStorage.readReviews();
-    const newReview: Review = {
-      ...reviewData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    // Debug logging
+    console.log("Rating received:", body.rating, "Type:", typeof body.rating);
+    console.log(
+      "Rating converted:",
+      newReview.rating,
+      "Type:",
+      typeof newReview.rating
+    );
 
-    reviews.push(newReview);
-    await fileStorage.writeReviews(reviews);
+    const { data: review, error } = await serverSupabase
+      .from("reviews")
+      .insert([newReview])
+      .select()
+      .single();
 
-    console.log("New review created:", newReview.id, newReview.name);
+    if (error) {
+      console.error("Supabase error:", error);
+      return NextResponse.json(
+        { success: false, error: "Failed to submit review" },
+        { status: 500 }
+      );
+    }
+
+    console.log("New review created:", review.id, review.name);
 
     return NextResponse.json(
       {
         success: true,
         message: "Review submitted successfully and is pending approval",
         data: {
-          id: newReview.id,
-          name: newReview.name,
-          rating: newReview.rating,
-          service: newReview.service,
-          status: newReview.status,
-          createdAt: newReview.createdAt,
+          id: review.id,
+          name: review.name,
+          rating: review.rating,
+          service: review.service,
+          status: review.status,
+          created_at: review.created_at,
         },
       },
       { status: 201 }

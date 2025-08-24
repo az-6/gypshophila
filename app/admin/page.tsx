@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatTimeAgo, getServiceDisplayName, Review } from "@/lib/db";
+import StarRating from "@/components/ui/star-rating";
 import {
   CheckCircle,
   XCircle,
@@ -95,7 +96,7 @@ export default function AdminReviewsPage() {
         setReviews((prev) =>
           prev.map((review) =>
             review.id === reviewId
-              ? { ...review, status, updatedAt: new Date().toISOString() }
+              ? { ...review, status, updated_at: new Date().toISOString() }
               : review
           )
         );
@@ -228,27 +229,13 @@ export default function AdminReviewsPage() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex items-center space-x-1">
-            {[...Array(5)].map((_, i) => (
-              <span
-                key={i}
-                className={`text-lg ${
-                  i < review.rating ? "text-yellow-400" : "text-gray-300"
-                }`}
-              >
-                ⭐
-              </span>
-            ))}
-            <span className="ml-2 text-sm text-gray-600">
-              {review.rating}/5
-            </span>
-          </div>
+          <StarRating rating={review.rating} size="md" showLabel={true} />
 
           <p className="text-gray-700 italic">"{review.review}"</p>
 
           <div className="flex items-center justify-between text-sm text-gray-500">
-            <span>Dibuat: {formatTimeAgo(review.createdAt)}</span>
-            <span>Diperbarui: {formatTimeAgo(review.updatedAt)}</span>
+            <span>Dibuat: {formatTimeAgo(review.created_at)}</span>
+            <span>Diperbarui: {formatTimeAgo(review.updated_at)}</span>
           </div>
 
           {review.status === "pending" && (
